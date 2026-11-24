@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DriveWild3R</title>
+<meta name="description" content="DriveWild3R: feedforward transient removal and compact reconstruction of multi-traversal driving data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=STIX+Two+Text:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Noto+Sans+Math&display=swap">
+<style>
+:root{
+  --bg:#fbfaf7;--surface:#ffffff;--surface-2:#f3f2ee;--ink:#1a1d22;--muted:#5d6570;--faint:#8b929b;--line:#e3e1db;--line-2:#d2cfc7;
+  --accent:#2f6fb0;--accent-ink:#ffffff;--focus:#2f6fb0;
+  --arrow:#7d7d7d;--flow:#e07a1f;
+  --a:#4f74b3;--a-bg:#eef3fa;--a-bd:#b9cde8;
+  --b:#4f9158;--b-bg:#eff6ee;--b-bd:#bcd8b5;
+  --c:#7653c0;--c-bg:#f4effb;--c-bd:#cfbdeb;
+  --d:#c47425;--d-bg:#fcf3e9;--d-bd:#ecc9a2;
+  --teal:#2a9d8f;--teal-bg:#d4efea;
+  --geo:#4a72ad;--geo-bg:#e9f1fa;--app:#b04a52;--app-bg:#fbeded;
+  --dark-box:#1d3d63;--dark-box-ink:#ffffff;
+  --ours:#e07a1f;--base:#a7adb5;--relit:#7f97b8;
+  --plate:#ffffff;
+  --shadow:0 1px 2px rgba(20,24,30,.05),0 8px 24px rgba(20,24,30,.06);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1115;--surface:#171a20;--surface-2:#1e222a;--ink:#e9ebee;--muted:#a3abb5;--faint:#78808a;--line:#2a2f38;--line-2:#3a404b;
+    --accent:#6ea8e6;--accent-ink:#0f1115;--focus:#6ea8e6;--arrow:#8e949c;--flow:#f0973f;
+    --a:#7d9fd8;--a-bg:#18212f;--a-bd:#2f4566;--b:#77b77f;--b-bg:#16231a;--b-bd:#2d4a33;
+    --c:#a589e6;--c-bg:#211b30;--c-bd:#47396b;--d:#e0954d;--d-bg:#2b2117;--d-bd:#5a3f22;
+    --teal:#4fc1b2;--teal-bg:#12302d;--geo:#7ea3dc;--geo-bg:#17233a;--app:#df7a83;--app-bg:#32191d;
+    --dark-box:#2b5689;--ours:#f0973f;--base:#6b727c;--relit:#5c7aa3;--plate:#ffffff;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1115;--surface:#171a20;--surface-2:#1e222a;--ink:#e9ebee;--muted:#a3abb5;--faint:#78808a;--line:#2a2f38;--line-2:#3a404b;
+  --accent:#6ea8e6;--accent-ink:#0f1115;--focus:#6ea8e6;--arrow:#8e949c;--flow:#f0973f;
+  --a:#7d9fd8;--a-bg:#18212f;--a-bd:#2f4566;--b:#77b77f;--b-bg:#16231a;--b-bd:#2d4a33;
+  --c:#a589e6;--c-bg:#211b30;--c-bd:#47396b;--d:#e0954d;--d-bg:#2b2117;--d-bd:#5a3f22;
+  --teal:#4fc1b2;--teal-bg:#12302d;--geo:#7ea3dc;--geo-bg:#17233a;--app:#df7a83;--app-bg:#32191d;
+  --dark-box:#2b5689;--ours:#f0973f;--base:#6b727c;--relit:#5c7aa3;--plate:#ffffff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:4px}
+.m{font-family:"STIX Two Text","Times New Roman",serif;font-style:italic}
+.wrap{width:min(1060px,100% - 32px);margin-inline:auto}
+.skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 12px;z-index:50}
+.skip:focus{left:8px}
+
+/* nav */
+header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+header.top nav{display:flex;align-items:center;gap:22px;height:58px}
+.brand{font-weight:800;letter-spacing:-.03em;font-size:1.12rem;color:var(--ink);text-decoration:none;margin-right:auto}
+.brand b{color:var(--ours)}
+header.top nav a.nl{color:var(--muted);text-decoration:none;font-size:.9rem;font-weight:500}
+header.top nav a.nl:hover{color:var(--ink)}
+.iconbtn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);width:34px;height:34px;border-radius:9px;cursor:pointer;display:grid;place-items:center}
+@media (max-width:760px){header.top nav a.nl{display:none}}
+
+/* hero */
+.hero{padding:56px 0 28px;text-align:center}
+h1{font-size:clamp(2.6rem,6vw,4.4rem);line-height:1.02;letter-spacing:-.045em;margin:0 0 14px;font-weight:800}
+h1 .three{color:var(--ours)}
+.mn{font-family:"STIX Two Text","Times New Roman",serif;font-variant:small-caps;font-size:1.1em;line-height:0;letter-spacing:.01em;white-space:nowrap}
+.foot{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:6px 18px;text-align:center}.foot .brand{margin:0;font-size:1rem}.foot a{color:inherit}
+.subtitle{font-size:clamp(1.35rem,2.9vw,1.95rem);line-height:1.28;color:var(--muted);max-width:940px;margin:0 auto 22px;font-weight:600;letter-spacing:-.02em}
+.authors{display:grid;grid-template-columns:repeat(4,auto);justify-content:center;gap:4px 28px;font-size:1.02rem;font-weight:500;color:var(--ink);max-width:860px;margin:0 auto 8px}
+.authors sup,.affils sup{font-size:.68em;margin-left:1px;color:var(--ours);font-weight:700}
+.affils{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 18px;color:var(--muted);font-size:.92rem;margin:0 auto 22px}
+.btnrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font:600 .92rem/1 Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn[aria-disabled="true"]{color:var(--faint);cursor:default}
+.btn[aria-disabled="true"]:hover{border-color:var(--line-2)}
+.btn small{font-weight:500;color:var(--faint)}
+.lc{flex:none;display:block}.lc-sun{display:none}
+:root[data-theme="dark"] .lc-sun{display:block}:root[data-theme="dark"] .lc-moon{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lc-sun{display:block}:root:not([data-theme="light"]) .lc-moon{display:none}}
+.teaser{margin:34px auto 0;background:var(--plate);border-radius:16px;padding:14px;border:1px solid var(--line);box-shadow:var(--shadow)}
+.teaser img{border-radius:8px;cursor:zoom-in}
+figcaption,.cap{font-size:.86rem;color:var(--muted);margin-top:10px;text-align:left;line-height:1.5}
+.teaser figcaption{color:#5d6570}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:30px 0 8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.stat strong{display:block;font-size:clamp(1.5rem,3vw,2.1rem);letter-spacing:-.04em;line-height:1.1;margin-bottom:6px}
+.stat span{font-size:.86rem;color:var(--muted);line-height:1.4;display:block}
+@media (max-width:860px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.authors{grid-template-columns:repeat(2,auto);gap:4px 18px}}
+
+/* sections */
+section{padding:64px 0 24px}
+.sec-head{margin-bottom:22px}
+.kicker{font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ours);margin:0 0 8px}
+h2{font-size:clamp(1.7rem,3.4vw,2.4rem);line-height:1.12;letter-spacing:-.035em;margin:0 0 12px}
+h3{font-size:1.12rem;letter-spacing:-.015em;margin:0 0 8px}
+p{margin:0 0 12px}
+.lead{color:var(--muted);font-size:1.04rem}
+.abstract{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px 28px;font-size:1.02rem;line-height:1.7}
+.abstract p:last-child{margin:0}
+
+/* card + controls */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;color:var(--muted);font:600 .84rem/1 Inter,system-ui,sans-serif;padding:9px 12px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.tbtn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font:600 .84rem/1 Inter,system-ui,sans-serif;height:34px;padding:0 12px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tbtn:hover{border-color:var(--ink)}
+.tbtn.play{background:var(--ink);color:var(--bg);border-color:var(--ink);min-width:86px;justify-content:center}
+.chk{display:inline-flex;align-items:center;gap:7px;font-size:.86rem;color:var(--ink);cursor:pointer;user-select:none}
+.chk input{width:16px;height:16px;accent-color:var(--ours)}
+.chip{display:inline-block;font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);margin:0 6px 6px 0}
+
+/* ---------- model overview ---------- */
+.fighint{display:flex;align-items:center;gap:7px;margin:0;padding:10px var(--inset,18px);border-top:1px solid var(--line);font-size:.84rem;color:var(--muted)}
+.progress{height:3px;background:var(--line);position:relative;overflow:hidden}
+.progress span{position:absolute;inset:0 auto 0 0;width:0;background:var(--ours)}
+
+
+/* ---------- faithful figures ---------- */
+.figwrap{position:relative;background:#fff;overflow-x:auto;overflow-y:hidden;padding:14px}
+.fig .stage{overflow:hidden}
+.fig{position:relative;margin:0 auto}
+.fig .stage{position:absolute;left:0;top:0;transform-origin:0 0;font-family:'STIX Two Text','Noto Sans Math','Times New Roman',serif;color:#1f2933;background:#fff}
+.fig .stage sub,.fig .stage sup{line-height:0;font-size:.72em}
+.fig .hs{position:absolute;cursor:help;border-radius:12px}
+.fig .hs::after{content:'';position:absolute;inset:-5px;border-radius:inherit;border:5px solid transparent;transition:border-color .18s,box-shadow .18s}
+.fig .hs:hover::after{border-color:rgba(224,122,31,.75);box-shadow:0 0 0 8px rgba(224,122,31,.14)}
+.ftip{position:absolute;z-index:6;pointer-events:none;max-width:300px;background:var(--surface);color:var(--ink);border:1px solid var(--line-2);box-shadow:var(--shadow);border-radius:10px;padding:9px 12px;font-size:.82rem;line-height:1.45;opacity:0;transition:opacity .12s}
+.ftip.on{opacity:1}
+.ftip b{display:block;margin-bottom:2px;font-size:.86rem}
+
+/* widgets */
+.widgets{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.widget{padding:18px 18px 16px}
+.widget h3{display:flex;align-items:center;gap:10px}
+.widget h3 i{font-style:normal;width:22px;height:22px;border-radius:6px;display:inline-grid;place-items:center;color:#fff;font-size:.74rem;background:var(--sc)}
+.widget .lead{font-size:.88rem;margin-bottom:12px}
+.wbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-bottom:12px}
+.wbar .seg button{padding:8px 10px;font-size:.8rem}
+.wbar .tbtn{height:32px;font-size:.8rem}
+.wbar .chk{font-size:.82rem}
+.wrange{flex:1 1 150px;min-width:0;display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);white-space:nowrap}
+.wstage{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:14px;align-items:stretch}
+.wside{display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-width:0}
+.sampview{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#111}
+.sampview img,.sampview canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sampstats>div{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.sampstats .big{font-size:1.3rem;font-weight:700;color:var(--ink);letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
+.sampstats span:not(.big){font-size:.74rem;line-height:1.35;color:var(--muted)}
+.sampstats em{font-style:normal;color:var(--faint)}
+.legend .chk{font-size:.78rem;margin-right:6px}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:.76rem;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.ltview{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#111}
+.ltview svg{width:100%;height:100%;display:block}
+.wlabel{display:block;font-size:.74rem;color:var(--muted);margin-bottom:4px}
+.ltref{border-radius:8px;overflow:hidden;aspect-ratio:4/3;background:#111}
+.ltref img{width:100%;height:100%;object-fit:cover}
+.gbars{font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.gbar{display:grid;grid-template-columns:22px minmax(0,1fr) 36px;align-items:center;gap:5px;margin:2px 0}
+.gbar b{text-align:right;font-weight:600;color:var(--ink)}
+.gbar .track{height:7px;background:var(--surface-2);border-radius:5px;position:relative;overflow:hidden;border:1px solid var(--line)}
+.gbar .track .mid{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line-2)}
+.gbar .track .fill{position:absolute;top:0;bottom:0;transition:left .5s,width .5s}
+input[type=range]{width:100%;margin:0;accent-color:var(--ours)}
+@media (max-width:980px){.widgets{grid-template-columns:1fr}}
+@media (max-width:520px){.wstage{grid-template-columns:1fr}.wside{flex-direction:row;flex-wrap:wrap}.wside>*{flex:1 1 120px}}
+
+/* bench chart */
+.bench-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;align-items:start}
+.chart{padding:18px}
+.chart .rows{margin-top:12px}
+.crow{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center;font-size:.84rem;padding:3px 0}
+.crow .nm{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow.ours .nm{color:var(--ink);font-weight:600}
+.crow .tr{height:16px;background:var(--surface-2);border-radius:5px;overflow:hidden}
+.crow .tr span{display:block;height:100%;border-radius:5px;transition:width .6s cubic-bezier(.3,.7,.2,1);background:var(--base)}
+.crow.relit .tr span{background:var(--relit)}
+.crow.ours .tr span{background:var(--ours)}
+.crow .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.crow.gap{margin-top:8px}
+.chart .note{font-size:.78rem;color:var(--faint);margin-top:10px;display:grid}
+.chart .note span{grid-area:1/1;visibility:hidden}.chart .note span.on{visibility:visible}
+.segfill{display:flex;width:100%}.segfill button{flex:1 1 auto;padding:9px 6px;font-size:.8rem;white-space:nowrap}
+@media (max-width:520px){.segfill button{white-space:normal;line-height:1.2}}
+@media (max-width:900px){.bench-grid{grid-template-columns:1fr}}
+@media (max-width:480px){.crow{grid-template-columns:110px 1fr 48px}}
+
+/* tables */
+.tablewrap{overflow-x:auto}
+table.res{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem}
+table.res th,table.res td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.res th:first-child,table.res td:first-child{text-align:left}
+table.res thead th{color:var(--muted);font-weight:600;font-size:.8rem}
+table.res thead tr:first-child th{border-bottom:0;padding-bottom:0;color:var(--ink)}
+table.res tr.ours td{background:color-mix(in srgb,var(--ours) 9%,transparent)}
+table.res tr.ours td:first-child{font-weight:700}
+#mainTable{table-layout:fixed;min-width:640px}
+#mainTable td:first-child{overflow:hidden;text-overflow:ellipsis}
+#mainTable tbody tr{animation:rowin .35s ease both}
+@keyframes rowin{from{opacity:0;transform:translateY(-4px)}}
+@media(prefers-reduced-motion:reduce){#mainTable tbody tr{animation:none}}
+table.res td.best{font-weight:800;color:var(--ink)}
+table.res td.dim{color:var(--faint)}
+.tcard{padding:16px 18px}
+.abl{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px}
+.abl>.card,.bench-grid>*,.widgets>*,.relight-wrap>*{min-width:0}
+.abl .tcard h3{font-size:.95rem}
+.abl table.res{font-size:.84rem}
+.abl table.res th,.abl table.res td{padding:7px 4px}
+.abl .tcard{padding:14px 14px}
+.abl table.res{font-size:.8rem}
+
+
+/* relight */
+.rl{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rl figure{margin:0}
+.rl .frame{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#111}
+.rl .frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .12s linear}
+.rl .tag{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.6);color:#fff;font-size:.74rem;font-weight:600;padding:3px 8px;border-radius:6px}
+.rlctl{display:grid;grid-template-columns:1fr;gap:6px;margin-top:14px}
+.ticks{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted)}
+.relight-wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:center}
+@media (max-width:900px){.relight-wrap{grid-template-columns:1fr}}
+
+/* figure plates */
+.plate{background:var(--plate);border-radius:14px;padding:12px;border:1px solid var(--line)}
+.plate img{margin:auto;cursor:zoom-in;max-height:calc(100svh - 170px);width:auto;max-width:100%}
+.plate + figcaption{margin-top:10px}
+.galfig{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 20px;margin:0}
+.galfig .plate{flex:0 1 auto;min-width:0;max-width:100%}
+.vidfig{margin:var(--gap,22px) 0 0}.vidfig video{display:block;width:100%;height:auto;border-radius:6px;background:#111}.vids{display:grid;gap:10px}
+.vidfig figcaption .tbtn{float:right;margin:0 0 6px 14px}
+.galfig figcaption{flex:1 1 170px;margin-top:0}
+
+/* misc */
+pre.bib{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow-x:auto;font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;margin:0}
+.bibwrap{position:relative}
+.bibwrap .tbtn{position:absolute;right:10px;top:10px}
+footer{border-top:1px solid var(--line);margin-top:56px;padding:26px 0 40px;color:var(--muted);font-size:.86rem}
+dialog#lb{border:0;padding:0;background:transparent;max-width:96vw;max-height:94vh}
+dialog#lb::backdrop{background:rgba(8,10,14,.82)}
+dialog#lb img{max-width:96vw;max-height:90vh;width:auto;height:auto;border-radius:8px;background:#fff}
+dialog#lb button{position:fixed;top:14px;right:16px;background:#fff;border:0;border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer}
+</style>
+<style>
+/* Align the paper, figures and experiments to one reading grid. */
+:root{--gutter:clamp(16px,4vw,64px);--gap:clamp(16px,2vw,28px);--inset:clamp(16px,2vw,28px)}
+.wrap{width:min(1200px,calc(100% - 2 * var(--gutter)))}
+.hero{text-align:left;padding:clamp(42px,6vw,90px) 0 0}
+.masthead{display:grid;grid-template-columns:1fr;gap:24px;text-align:center}
+h1{font-size:clamp(3.25rem,6.8vw,6.3rem);line-height:.98;letter-spacing:-.066em;margin-bottom:18px}
+.subtitle{font-size:clamp(1.1rem,2vw,1.65rem);font-weight:500;text-wrap:balance;margin:0;line-height:1.35}
+.masthead .subtitle{margin-inline:auto}
+.masthead .authors{display:grid;grid-template-columns:repeat(4,auto);justify-content:center;font-size:.95rem;gap:6px 24px;margin:0 auto}
+.masthead .affils{justify-content:center;gap:3px 14px;font-size:.81rem;margin:14px 0 0}
+@media(max-width:640px){.masthead .authors{grid-template-columns:repeat(2,auto);column-gap:16px}}
+.btnrow{justify-content:center;text-align:center;margin:24px 0 0;gap:8px;align-items:center}
+.btn[aria-disabled=true]{border-color:transparent;background:var(--surface-2);color:var(--muted)}
+.btn small,.release{color:var(--muted)}.release{font-size:.8rem;line-height:1.5;max-width:43ch;padding-inline:6px}
+.btn:disabled{background:var(--surface-2);color:var(--muted);border-color:var(--line);cursor:default}
+.btnrow .release{flex-basis:100%;max-width:none;padding:0}
+.teaser{margin-top:28px;padding:clamp(10px,1.3vw,18px);box-shadow:none}
+.teaser img{width:100%;height:auto}.teaser figcaption{margin:14px 0 0}
+.stats{gap:0;margin:28px 0 0;padding:20px 0;border-block:1px solid var(--line)}
+.stat{border:0;border-radius:0;border-left:1px solid var(--line);background:none;padding:0 var(--inset)}
+.stat:first-child{padding-left:0;border-left:0}.stat strong{font-variant-numeric:tabular-nums}
+section.wrap{padding:clamp(46px,5vw,76px) 0 0}
+.sec-head{margin-bottom:24px}.sec-head h2{text-wrap:pretty}
+.sec-head .lead{line-height:1.65}
+.abstract{columns:2;column-gap:clamp(24px,4vw,60px);padding:var(--inset);line-height:1.65}
+.abstract p{orphans:3;widows:3}
+.widgets,.abl,.bench-grid{gap:var(--gap)}
+.card,.plate,.teaser,.abstract{border-radius:16px}
+.card{box-shadow:none}.widget,.tcard,.chart,.abl .tcard{padding:var(--inset)}
+.abl{grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr))}
+.abl .tcard{display:flex;flex-direction:column}.abl .tcard>.cap{margin-top:auto;padding-top:14px;min-height:3em;box-sizing:content-box}.abl .cap:last-child:not(h3 span){margin-bottom:0}
+.abl h3 .cap{display:block;font-weight:400;margin:4px 0 10px}
+
+.widget h3 i{flex-shrink:0}
+.bench-grid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);align-items:stretch}.bench-grid .crow{padding:2px 0}.bench-grid .crow .tr{height:14px}.bench-grid .crow.gap{margin-top:6px}.bench-grid .chart h3{font-size:1rem}.bench-grid figure{height:100%;display:flex;flex-direction:column}.bench-grid .chart{display:flex;flex-direction:column}.bench-grid .chart .note{margin-top:auto;padding-top:10px}
+.plate img{width:100%;height:auto;max-height:none}
+.galfig{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:var(--gap)}
+.galfig figcaption{padding:var(--inset) 0;border-top:1px solid var(--line)}
+.galfig figcaption b{display:block;margin-bottom:8px;color:var(--ink);font-size:1.05rem}
+.relight-wrap{grid-template-columns:minmax(0,.85fr) minmax(0,1.25fr);gap:var(--gap);padding:var(--inset);border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.tablewrap{max-width:100%}.btnrow,.wbar{row-gap:10px}
+pre.bib{padding:var(--inset);white-space:pre-wrap;overflow-wrap:anywhere;font-size:clamp(.83rem,1.1vw,1rem)}
+#bibtex .sec-head{display:grid;grid-template-columns:1fr auto;align-items:center}#bibtex .kicker{grid-column:1/-1}#bibtex h2{margin:0}.mobile-sections{display:none}
+@media(min-width:981px){.widgets{grid-template-rows:repeat(5,auto);row-gap:12px}.widget{display:grid;grid-template-rows:subgrid;grid-row:span 5}.widget>*{margin-block:0!important}.wstage{align-self:start}.legend{align-self:start}}
+@media(max-width:900px){.masthead{grid-template-columns:1fr}.credits{border:0;padding:0;margin-top:22px}.authors{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:4px 16px}.bench-grid,.relight-wrap{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:22px}.stat:nth-child(odd){border:0;padding-left:0}.abstract{columns:1}.relight-wrap .rl{max-width:640px;width:100%;margin:auto}}
+@media(max-width:760px){.mobile-sections{display:block;margin-left:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line-2);border-radius:9px;padding:8px;font:inherit;font-size:.86rem}header.top nav{gap:10px}.galfig{grid-template-columns:1fr;gap:8px}.galfig figcaption{border:0;padding:0}.stats{margin-top:20px}.stat strong{font-size:clamp(1.35rem,5vw,1.9rem)}.subtitle{text-wrap:pretty}.abl{grid-template-columns:1fr}.ftip{max-width:min(300px,90%)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media(max-width:900px){.masthead{gap:20px}.credits{margin:0}}
+@media(max-width:560px){.release{flex-basis:100%;padding:0}.wside.sampstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.sampstats>div{padding:8px}.sampstats em{display:block}}
+@media(min-width:901px){
+  .result-gallery{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,10fr);gap:var(--gap);align-items:stretch;margin-top:var(--gap)}
+  .result-gallery .galfig{display:flex;flex-direction:column;gap:12px;margin:0!important}
+  .result-gallery .galfig figcaption{flex:auto;border:0;padding:0}
+  .result-gallery .relight-wrap{display:flex;flex-direction:column-reverse;align-items:stretch;justify-content:space-between;margin:0!important}
+}
+@media(max-width:900px){.galfig{grid-template-columns:1fr;gap:8px}.galfig figcaption{padding:0;border:0}}
+</style>
+</head>
+<body>
+<!-- Icons: Lucide (https://lucide.dev), ISC License, Copyright (c) 2026 Lucide Icons and Contributors -->
+<!-- arXiv and GitHub logos: Simple Icons (https://simpleicons.org), CC0 1.0. The logos are trademarks of their owners. -->
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <nav class="wrap" aria-label="Sections">
+    <a class="brand" href="#main"><b>Drive</b>Wild3R</a>
+    <a class="nl" href="#abstract">Abstract</a>
+    <a class="nl" href="#method">Method</a>
+    <a class="nl" href="#refiner">Refiner</a>
+    <a class="nl" href="#bench">Benchmark</a>
+    <a class="nl" href="#results">Results</a>
+    <a class="nl" href="#bibtex">BibTeX</a>
+    <select class="mobile-sections" aria-label="Jump to section" onchange="if(this.value){location.hash=this.value;this.selectedIndex=0}">
+      <option value="">Sections</option><option value="abstract">Abstract</option><option value="method">Method</option><option value="refiner">Refiner</option><option value="bench">Benchmark</option><option value="results">Results</option><option value="ablations">Ablations</option><option value="bibtex">BibTeX</option>
+    </select>
+    <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg class="lc lc-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg><svg class="lc lc-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    </button>
+  </nav>
+</header>
+
+<main id="main">
+<!-- ===================== HERO ===================== -->
+<div class="wrap hero">
+  <div class="masthead"><div>
+  <h1><span class="three">Drive</span>Wild3R</h1>
+  <p class="subtitle">Feedforward Transient Removal and Compact Reconstruction of Multi-Traversal Driving Data</p>
+  </div><div class="credits"><p class="authors">
+    <span>Finn Köhler<sup>1*</sup></span>
+    <span>Chensheng Peng<sup>1*</sup></span>
+    <span>Jerry Shang<sup>1</sup></span>
+    <span>Aaditya Agnihotri<sup>1</sup></span>
+    <span>Thomas Monninger<sup>2</sup></span>
+    <span>Quentin HERAU<sup>3</sup></span>
+    <span>Masayoshi Tomizuka<sup>1</sup></span>
+    <span>Wei Zhan<sup>3,1</sup></span>
+  </p>
+  <p class="affils"><span><sup>1</sup>University of California, Berkeley</span><span><sup>2</sup>Mercedes-Benz Research &amp; Development North America</span><span><sup>3</sup>Applied Intuition</span><span><sup>*</sup>Equal contribution</span></p>
+  </div></div>
+  <div class="btnrow">
+    <button class="btn" type="button" disabled aria-describedby="release-status"><svg class="lc si-arxiv" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.8423 0a1.0037 1.0037 0 0 0-.922.6078c-.1536.3687-.0438.6275.2938 1.1113l6.9185 8.3597-1.0223 1.1058a1.0393 1.0393 0 0 0 .003 1.4229l1.2292 1.3135-5.4391 6.4444c-.2803.299-.4538.823-.2971 1.1986a1.0253 1.0253 0 0 0 .9585.635.9133.9133 0 0 0 .6891-.3405l5.783-6.126 7.4902 8.0051a.8527.8527 0 0 0 .6835.2597.9575.9575 0 0 0 .8777-.6138c.1577-.377-.017-.7502-.306-1.1407l-7.0518-8.3418 1.0632-1.13a.9626.9626 0 0 0 .0089-1.3165L4.6336.4639s-.3733-.4535-.768-.463zm0 .272h.0166c.2179.0052.4874.2715.5644.3639l.005.006.0052.0055 10.169 10.9905a.6915.6915 0 0 1-.0072.945l-1.0666 1.133-1.4982-1.7724-8.5994-10.39c-.3286-.472-.352-.6183-.2592-.841a.7307.7307 0 0 1 .6704-.4401Zm14.341 1.5701a.877.877 0 0 0-.6554.2418l-5.6962 6.1584 1.6944 1.8319 5.3089-6.5138c.3251-.4335.479-.6603.3247-1.0292a1.1205 1.1205 0 0 0-.9763-.689zm-7.6557 12.2823 1.3186 1.4135-5.7864 6.1295a.6494.6494 0 0 1-.4959.26.7516.7516 0 0 1-.706-.4669c-.1119-.2682.0359-.6864.2442-.9083l.0051-.0055.0047-.0055z"/></svg>arXiv</button>
+    <a class="btn" href="https://github.com/DriveWild3R/DriveWild3R"><svg class="lc si-github" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>Code</a>
+    <a class="btn" href="https://huggingface.co/DriveWild3R/DriveWild3R"><svg class="lc lc-box" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>Model</a>
+    <a class="btn" href="https://huggingface.co/datasets/DriveWild3R/DriveWild3R-Bench"><svg class="lc lc-database" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>Dataset</a>
+    <a class="btn" href="#bibtex"><svg class="lc lc-quote" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/><path d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/></svg>BibTeX</a>
+    <span class="release" id="release-status">Paper coming soon.</span>
+  </div>
+  <figure class="teaser">
+    <img src="assets/paper/teaser.jpg" width="2400" height="793" alt="Left: two drives along the same road with different traffic. Center: the combined Gaussian scene with the vehicles removed. Right: novel views rendered in the colors of two reference images" data-zoom>
+    <figcaption><b>One transient-free scene from multiple drives.</b> Two traversals of the same road see different traffic (left). <span class="mn">DriveWild3R</span> combines them in a single feedforward pass into one shared Gaussian scene without the vehicles (center). Novel views of that scene can be rendered in the lighting and color of any reference image (right, references inset), while the geometry stays the same.</figcaption>
+  </figure>
+
+  <div class="stats" role="list">
+    <div class="stat" role="listitem"><strong>+3.9&nbsp;dB</strong><span>traffic-region PSNR over the best feedforward baseline</span></div>
+    <div class="stat" role="listitem"><strong>&lt;&nbsp;2&nbsp;s</strong><span>per scene, vs. 38&nbsp;min for per-scene MTGS</span></div>
+    <div class="stat" role="listitem"><strong>100k–400k</strong><span>Gaussians instead of 1.6M</span></div>
+    <div class="stat" role="listitem"><strong>Best LPIPS</strong><span>on held-out drives of MTGS and Ithaca365</span></div>
+  </div>
+</div>
+
+<!-- ===================== ABSTRACT ===================== -->
+<section id="abstract" class="wrap">
+  <div class="sec-head"><p class="kicker">Abstract</p><h2>One clean street from many drives</h2></div>
+  <div class="abstract">
+    <p>Multi-traversal drives observe the same road block under changing traffic and lighting, which gives more observations from more viewpoints than single-traversal data. Existing feedforward 3D Gaussian Splatting methods reconstruct a scene within seconds. On such data, however, they either reproduce the transient vehicles in their input views or bake them into the scene as ghosting artifacts.</p>
+    <p>We present <span class="mn">DriveWild3R</span>, a feedforward framework that reconstructs a shared, transient-free scene with controllable lighting from multi-traversal driving data. We first add to the feedforward predictor a <b>mask head</b> that explicitly identifies transient objects, and an <b>entropy-aware sampling</b> strategy that greatly reduces redundant Gaussians. We then introduce a <b>lighting branch</b> that combines per-image lighting embeddings with per-Gaussian features to transfer the color pattern of any target image. To further improve quality, a <b>two-stage recurrent refiner</b> corrects first the geometry and then the appearance of the initial prediction.</p>
+    <p>To evaluate reconstruction quality and transient removal directly, we curate <span class="mn">DriveWild3R-Bench</span>, a simulated benchmark with traffic-free ground truth under diverse lighting and weather. On it, <span class="mn">DriveWild3R</span> beats the strongest feedforward baseline by 3.9&nbsp;dB PSNR on traffic regions. On the real-world MTGS and Ithaca365 datasets, <span class="mn">DriveWild3R</span> achieves the lowest LPIPS and the highest PSNR.</p>
+  </div>
+</section>
+
+<!-- ===================== METHOD OVERVIEW ===================== -->
+<section id="method" class="wrap">
+  <div class="sec-head">
+    <p class="kicker">Method</p>
+    <h2>Model overview</h2>
+  </div>
+
+  <div class="card" id="ov">
+    <div class="figwrap" id="wrapModel"><div class="fig" id="figModel" role="img" aria-label="DriveWild3R model figure: (A) calibrated initialization, (B) entropy-aware sampling, (C) decoupled lighting, (D) multi-traversal refinement"></div><div class="ftip" aria-hidden="true"></div></div>
+    <p class="fighint"><svg class="lc" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Hover over a module to see what it does.</p>
+  </div>
+
+  <!-- widgets -->
+  <div class="widgets">
+    <div class="card widget" id="sampWidget" style="--sc:var(--b)">
+      <h3><i>B</i>Try the entropy-aware sampler</h3>
+      <p class="lead">Pixels are kept in proportion to local entropy. Sky and vehicles count ×0.1.</p>
+      <div class="wbar">
+        <div class="seg" role="group" aria-label="Gaussian budget" id="sampBudget">
+          <button type="button" data-f="0.0625" aria-pressed="false">100k</button>
+          <button type="button" data-f="0.125" aria-pressed="true">200k</button>
+          <button type="button" data-f="0.25" aria-pressed="false">400k</button>
+        </div>
+        <div class="seg" role="group" aria-label="View" id="sampMode">
+          <button type="button" data-m="kept" aria-pressed="true">Kept</button>
+          <button type="button" data-m="prob" aria-pressed="false">Probability</button>
+        </div>
+        <button class="tbtn" type="button" id="sampAgain">↻ Resample</button>
+      </div>
+      <div class="wstage">
+        <div class="sampview"><img src="assets/fig/m_i2.jpg" alt="Traversal 1 context frame"><canvas id="sampCanvas" width="320" height="320" aria-label="Kept pixels overlaid on the context frame"></canvas></div>
+        <div class="wside sampstats">
+          <div><span class="big" id="sKept">–</span><span>Gaussians kept, of 1.6M</span></div>
+          <div><span class="big" id="sTrans">–</span><span>of kept pixels on vehicles <em id="sTransArea"></em></span></div>
+          <div><span class="big" id="sSky">–</span><span>of kept pixels in the sky <em id="sSkyArea"></em></span></div>
+        </div>
+      </div>
+      <div class="legend"><label class="chk"><input type="checkbox" id="sampMask" checked> Down-weight sky &amp; vehicles ×0.1</label><span><i style="background:#ffd84d"></i>static</span><span><i style="background:#ff4d4d"></i>transient</span><span><i style="background:#5ec8ff"></i>sky</span></div>
+    </div>
+
+    <div class="card widget" id="ltWidget" style="--sc:var(--c)">
+      <h3><i>C</i>Lighting as an affine color transform</h3>
+      <p class="lead"><span class="m">c′ = γ ⊙ c + b</span>, shown with one global transform. The model predicts one per Gaussian.</p>
+      <div class="wbar">
+        <div class="seg" role="group" aria-label="Target lighting" id="ltTarget">
+          <button type="button" data-t="sunset" aria-pressed="true">Sunset</button>
+          <button type="button" data-t="night" aria-pressed="false">Night</button>
+        </div>
+        <button class="tbtn" type="button" id="ltPlay">❚❚ Pause</button>
+        <label class="wrange" for="ltAmt"><span>Code <b id="ltAmtV">0%</b></span><input type="range" id="ltAmt" min="0" max="1" step="0.01" value="0"></label>
+      </div>
+      <div class="wstage">
+        <div class="ltview">
+          <svg viewBox="0 0 320 320" role="img" aria-label="Traversal 1 frame recolored by the selected affine transform">
+            <defs><filter id="ltF" color-interpolation-filters="sRGB"><feColorMatrix id="ltM" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/></filter></defs>
+            <image href="assets/fig/m_i2.jpg" x="0" y="0" width="320" height="320" filter="url(#ltF)"/>
+          </svg>
+        </div>
+        <div class="wside">
+          <div><span class="wlabel">Target frame</span><div class="ltref"><img id="ltRef" src="assets/fig/m_i4.jpg" alt="Target lighting reference frame"></div></div>
+          <div class="gbars" id="ltBars"></div>
+        </div>
+      </div>
+      <div class="legend"><span>Bars: gain γ and offset b per channel.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== REFINER ===================== -->
+<section id="refiner" class="wrap">
+  <div class="sec-head">
+    <p class="kicker">Learned multi-traversal refinement</p>
+    <h2>Render, compare, update: geometry first, then color</h2>
+    <p class="lead">Geometry steps compare each context view at its own lighting. Color steps then match the target drive.</p>
+  </div>
+  <div class="card">
+    <div class="figwrap" id="wrapRefine"><div class="fig" id="figRefine" role="img" aria-label="Recurrent refinement figure: geometry steps and appearance steps of the recurrent refiner"></div><div class="ftip" aria-hidden="true"></div></div>
+    <p class="fighint"><svg class="lc" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Hover over a block to see what it does.</p>
+  </div>
+</section>
+
+<!-- ===================== BENCH ===================== -->
+<section id="bench" class="wrap">
+  <div class="sec-head">
+    <p class="kicker">New benchmark</p>
+    <h2>DriveWild3R-Bench</h2>
+    <p class="lead">What was behind the car? Real data cannot show it. We render 29 CARLA locations with and without traffic along the same poses, giving traffic-free ground truth in 173 splits from daylight to night and fog.</p>
+  </div>
+  <div class="bench-grid">
+    <div>
+      <figure style="margin:0">
+        <div class="plate"><img src="assets/paper/carla_transients.jpg" alt="DriveWild3R-Bench comparison: ReSplat renders context vehicles as ghosts, Wild3R leaves smeared vehicle artifacts, DriveWild3R keeps the road clear" data-zoom></div>
+        <figcaption><b>Baked-in transients.</b> ReSplat renders ghosts and Wild3R smears vehicles. <span class="mn">DriveWild3R</span> keeps the road clear.</figcaption>
+      </figure>
+    </div>
+    <div class="card chart">
+      <div class="ctrl" style="justify-content:space-between">
+        <h3 style="margin:0">Transient removal against traffic-free ground truth</h3>
+      </div>
+      <div class="seg segfill" role="group" aria-label="Metric" id="benchMetric" style="margin-top:12px">
+        <button type="button" data-k="ti" aria-pressed="true">Input traffic</button>
+        <button type="button" data-k="si" aria-pressed="false">Input static</button>
+        <button type="button" data-k="th" aria-pressed="false">Held-out traffic</button>
+        <button type="button" data-k="fh" aria-pressed="false">Held-out full</button>
+        <button type="button" data-k="lp" aria-pressed="false">LPIPS</button>
+      </div>
+      <div class="rows" id="benchRows"></div>
+      <p class="note" id="benchNote"></p>
+    </div>
+  </div>
+  <div class="tcard card" style="margin-top:18px">
+    <h3>Where the traffic removal comes from</h3>
+    <p class="cap" style="margin-top:0">PSNR, 200k Gaussians, no lighting reference, same weights in every row.</p>
+    <div class="tablewrap">
+      <table class="res">
+        <thead><tr><th></th><th></th><th colspan="2" style="text-align:center">Input (50)</th><th colspan="2" style="text-align:center">Held-out (173)</th></tr>
+        <tr><th>Mask</th><th style="text-align:left">Refiner</th><th>Traffic</th><th>Static</th><th>Traffic</th><th>Full</th></tr></thead>
+        <tbody>
+          <tr><td>Dense, 1.6M</td><td style="text-align:left">–</td><td>18.24</td><td>21.68</td><td>15.29</td><td>14.51</td></tr>
+          <tr><td>None</td><td style="text-align:left"></td><td>18.93</td><td>20.99</td><td>15.40</td><td>14.47</td></tr>
+          <tr><td>None</td><td style="text-align:left">✓</td><td>18.67</td><td>22.01</td><td>15.25</td><td>14.58</td></tr>
+          <tr><td>Predicted</td><td style="text-align:left"></td><td>19.51</td><td>21.04</td><td>15.53</td><td>14.51</td></tr>
+          <tr class="ours"><td>Predicted</td><td style="text-align:left">✓</td><td class="best">20.34</td><td>22.10</td><td class="best">15.58</td><td>14.64</td></tr>
+          <tr><td>Ground truth</td><td style="text-align:left"></td><td>19.59</td><td>21.05</td><td>15.54</td><td>14.51</td></tr>
+          <tr><td>Ground truth</td><td style="text-align:left">✓</td><td>20.36</td><td class="best">22.14</td><td>15.56</td><td class="best">14.65</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">Masks move the budget to the static scene and stop the refiner from refitting vehicles. Predicted masks work as well as ground truth.</p>
+  </div>
+</section>
+
+<!-- ===================== RESULTS ===================== -->
+<section id="results" class="wrap">
+  <div class="sec-head">
+    <p class="kicker">Real-world results</p>
+    <h2>A new drive through an unseen block</h2>
+    <p class="lead">18 MTGS and 30 Ithaca365 splits from unseen road blocks, scored on a drive that contributes no context views.</p>
+  </div>
+  <div class="card tcard">
+    <div class="ctrl" style="justify-content:space-between;margin-bottom:8px">
+      <div class="seg" role="group" aria-label="Setting" id="mainMode">
+        <button type="button" data-m="noref" aria-pressed="true">No image of the target drive</button>
+        <button type="button" data-m="ref" aria-pressed="false">With target-drive references</button>
+      </div>
+      <span class="cap" style="margin:0">Bold = best in block · ↑ higher is better · ↓ lower is better</span>
+    </div>
+    <div class="tablewrap">
+      <table class="res" id="mainTable">
+        <colgroup><col style="width:22%"><col span="6"><col style="width:9%"></colgroup>
+        <thead>
+          <tr><th></th><th colspan="3" style="text-align:center">MTGS (18)</th><th colspan="3" style="text-align:center">Ithaca365 (30)</th><th></th></tr>
+          <tr><th>Method</th><th>PSNR ↑</th><th>SSIM ↑</th><th>LPIPS ↓</th><th>PSNR ↑</th><th>SSIM ↑</th><th>LPIPS ↓</th><th>Time</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="cap" id="mainNote"></p>
+  </div>
+
+  <figure class="vidfig">
+    <div class="plate vids">
+      <video src="assets/video/follow_scene_a.mp4" poster="assets/video/follow_scene_a.jpg" width="2392" height="558" muted loop playsinline preload="metadata" aria-label="Drive along a held-out traversal of MTGS scene A: ground truth, dense DriveWild3R and sparse DriveWild3R"></video>
+      <video src="assets/video/follow_scene_d.mp4" poster="assets/video/follow_scene_d.jpg" width="2392" height="558" muted loop playsinline preload="metadata" aria-label="Drive along a held-out traversal of MTGS scene D: ground truth, dense DriveWild3R and sparse DriveWild3R"></video>
+    </div>
+    <figcaption><button class="tbtn" type="button" id="vidPlay">❚❚ Pause</button><b>Driving through the reconstruction.</b> Two MTGS scenes, rendered along a drive that was never seen. The sparse head uses 8× fewer Gaussians than the dense cloud of one Gaussian per pixel. Zero-shot: wider input views and more context views than in the paper, without retraining.</figcaption>
+  </figure>
+
+  <div class="result-gallery">
+  <figure class="galfig" style="margin-top:22px">
+    <div class="plate"><img src="assets/paper/qualitative.jpg" alt="Held-out traversals: ground truth, ReSplat and DriveWild3R with zoomed crops" data-zoom loading="lazy"></div>
+    <figcaption><b>Held-out traversals.</b> ReSplat blurs detail and keeps vehicles from the context drives. <span class="mn">DriveWild3R</span> stays sharp but can leave streaks on the road.</figcaption>
+  </figure>
+
+  <div class="relight-wrap" style="margin-top:28px">
+    <div>
+      <p class="kicker">Appearance transfer from arbitrary images</p>
+      <h3 style="font-size:1.4rem">Relight a reconstructed street</h3>
+      <p class="lead" style="font-size:.95rem">Lighting codes from three synthetic images (insets), noon → sunset → night. Only colors change: no new street lights or shadows.</p>
+      <div class="seg" role="group" aria-label="Block" id="rlBlock" style="margin-bottom:6px">
+        <button type="button" data-b="0" aria-pressed="true">Block C</button>
+        <button type="button" data-b="1" aria-pressed="false">Block F</button>
+      </div>
+      <div class="rlctl">
+        <label for="rlSlider" class="cap" style="margin:0">Target lighting code</label>
+        <input type="range" id="rlSlider" min="0" max="6" step="0.01" value="0">
+        <div class="ticks"><span>Noon</span><span>Sunset</span><span>Night</span></div>
+        <div class="ctrl"><button class="tbtn" type="button" id="rlPlay">▶ Animate</button></div>
+      </div>
+    </div>
+    <div class="rl">
+      <figure><div class="frame"><img id="rlSrc" src="assets/relight/b0_0.jpg" alt="Source lighting render"><span class="tag">Source lighting</span></div></figure>
+      <figure><div class="frame" id="rlFrame"><img id="rlA" src="assets/relight/b0_1.jpg" alt="Relit render"><img id="rlB" src="assets/relight/b0_2.jpg" alt="" style="opacity:0"><span class="tag" id="rlTag">Relit · noon</span></div></figure>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- ===================== ABLATIONS ===================== -->
+<section id="ablations" class="wrap">
+  <div class="sec-head"><p class="kicker">Ablations</p><h2>What each component buys</h2></div>
+  <div class="abl">
+    <div class="card tcard">
+      <h3>Refiner <span class="cap">(200k, no reference)</span></h3>
+      <div class="tablewrap"><table class="res">
+        <thead><tr><th></th><th colspan="2" style="text-align:center">MTGS</th><th colspan="2" style="text-align:center">Ithaca365</th></tr><tr><th>Refiner</th><th>PSNR</th><th>LPIPS</th><th>PSNR</th><th>LPIPS</th></tr></thead>
+        <tbody>
+          <tr><td>None</td><td>19.13</td><td>.262</td><td>18.32</td><td>.277</td></tr>
+          <tr><td>Frozen, 2 steps</td><td>19.40</td><td>.294</td><td>18.48</td><td>.320</td></tr>
+          <tr><td>Frozen, 4 steps</td><td>19.17</td><td>.313</td><td>18.54</td><td>.337</td></tr>
+          <tr class="ours"><td>Fine-tuned, 2</td><td class="best">19.88</td><td class="best">.235</td><td class="best">18.65</td><td class="best">.249</td></tr>
+        </tbody></table></div>
+      <p class="cap">Frozen, ReSplat's refiner barely helps. Fine-tuned with two steps is best.</p>
+    </div>
+    <div class="card tcard">
+      <h3>Filling sampling holes <span class="cap">(MTGS, 100k)</span></h3>
+      <div class="tablewrap"><table class="res">
+        <thead><tr><th>No refiner</th><th>PSNR</th><th>SSIM</th><th>LPIPS</th></tr></thead>
+        <tbody>
+          <tr><td>Discard the rest</td><td>10.51</td><td>.304</td><td>.530</td></tr>
+          <tr><td>Merge the rest</td><td>18.75</td><td class="best">.636</td><td>.359</td></tr>
+          <tr class="ours"><td>Our head</td><td class="best">18.88</td><td>.616</td><td class="best">.274</td></tr>
+          <tr><td class="dim">Dense, 1.6M</td><td class="dim">19.18</td><td class="dim">.623</td><td class="dim">.227</td></tr>
+        </tbody></table></div>
+      <p class="cap">Same kept pixels in every row.</p>
+    </div>
+    <div class="card tcard">
+      <h3>Lighting branch <span class="cap">(200k)</span></h3>
+      <div class="tablewrap"><table class="res">
+        <thead><tr><th></th><th colspan="2" style="text-align:center">MTGS</th><th colspan="2" style="text-align:center">Ithaca365</th></tr><tr><th>Lighting</th><th>PSNR</th><th>LPIPS</th><th>PSNR</th><th>LPIPS</th></tr></thead>
+        <tbody>
+          <tr><td>No reference</td><td>19.88</td><td>.235</td><td>18.65</td><td>.249</td></tr>
+          <tr><td>+ lighting code</td><td>20.71</td><td>.231</td><td>19.39</td><td>.238</td></tr>
+          <tr class="ours"><td>+ color steps</td><td class="best">21.26</td><td class="best">.220</td><td class="best">19.90</td><td class="best">.218</td></tr>
+        </tbody></table></div>
+      <p class="cap">Same geometry in every row.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== BIBTEX ===================== -->
+<section id="bibtex" class="wrap">
+  <div class="sec-head"><p class="kicker">Citation</p><h2>BibTeX</h2><button class="tbtn" type="button" id="bibCopy">Copy</button></div>
+  <div class="bibwrap">
+    <pre class="bib" id="bib">@misc{koehler2026drivewild3r,
+  title  = {DriveWild3R: Feedforward Transient Removal and Compact Reconstruction of Multi-Traversal Driving Data},
+  author = {K{\"o}hler, Finn and Peng, Chensheng and Shang, Jerry and Agnihotri, Aaditya and Monninger, Thomas and HERAU, Quentin and Tomizuka, Masayoshi and Zhan, Wei},
+  year   = {2026}
+}</pre>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot"><span class="brand"><b>Drive</b>Wild3R</span><span>University of California, Berkeley · Mercedes-Benz Research &amp; Development North America · Applied Intuition</span><span>Contact: <a href="mailto:finn.koehler@berkeley.edu">finn.koehler@berkeley.edu</a></span></div>
+</footer>
+
+<dialog id="lb" aria-label="Enlarged figure"><button type="button" id="lbClose" aria-label="Close">×</button><img id="lbImg" alt=""></dialog>
+
+<script src="assets/sampler-map.js"></script>
+<script src="assets/figures.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const NS = 'http://www.w3.org/2000/svg';
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function rng(seed) { let s = seed % 2147483647; if (s <= 0) s += 2147483646; return () => (s = s * 16807 % 2147483647, (s - 1) / 2147483646); }
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function setPressed(group, btn) { $$('button', group).forEach(b => b.setAttribute('aria-pressed', String(b === btn))); }
+
+/* ---------- theme ---------- */
+const root = document.documentElement;
+try { const t = localStorage.getItem('dw3r-theme'); if (t) root.dataset.theme = t; } catch (e) {}
+$('#themeBtn').addEventListener('click', () => {
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('dw3r-theme', root.dataset.theme); } catch (e) {}
+});
+
+/* ---------- faithful figures (rendered from figure_files layouts) ---------- */
+const GLYPH = {
+  trap: '<svg width="100%" height="100%" viewBox="0 0 145 192" preserveAspectRatio="none" aria-hidden="true" style="display:block;overflow:visible"><polygon points="1,1 144,48 144,144 1,191" fill="#c9daf2" stroke="#4f74b3" stroke-width="2" stroke-linejoin="round"/></svg>',
+  mlp: '<svg width="100%" height="100%" viewBox="0 0 114 98" aria-hidden="true" style="display:block;overflow:visible"><g stroke="#a9a9a9" stroke-width="1.2"><path d="M12 28 L57 10 M12 28 L57 37 M12 28 L57 64 M12 28 L57 90 M12 72 L57 10 M12 72 L57 37 M12 72 L57 64 M12 72 L57 90 M57 10 L102 28 M57 37 L102 28 M57 64 L102 28 M57 90 L102 28 M57 10 L102 72 M57 37 L102 72 M57 64 L102 72 M57 90 L102 72"/></g><g stroke="#3a3a3a" stroke-width="1.2"><circle cx="12" cy="28" r="9" fill="#1f77d0"/><circle cx="12" cy="72" r="9" fill="#8bc34a"/><circle cx="57" cy="10" r="9" fill="#8bc34a"/><circle cx="57" cy="37" r="9" fill="#8bc34a"/><circle cx="57" cy="64" r="9" fill="#8bc34a"/><circle cx="57" cy="90" r="9" fill="#e53935"/><circle cx="102" cy="28" r="9" fill="#f08c1a"/><circle cx="102" cy="72" r="9" fill="#e53935"/></g></svg>',
+  snow: '<svg width="100%" height="100%" viewBox="0 0 24 24" aria-label="Frozen" role="img" fill="none" stroke="#5b8dc9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10M9.5 3.8 12 6.3l2.5-2.5M9.5 20.2 12 17.7l2.5 2.5M3.6 10.5 6.9 9.6 6 6.3M20.4 13.5l-3.3.9.9 3.3M3.6 13.5l3.3.9-.9 3.3M20.4 10.5l-3.3-.9.9-3.3"/></svg>',
+  arcTop: '<svg width="100%" height="100%" viewBox="0 0 140 52" preserveAspectRatio="none" aria-hidden="true" style="display:block;overflow:visible"><path d="M 4 48 C 30 0, 110 0, 133 43" fill="none" stroke="#7d7d7d" stroke-width="4" stroke-linecap="round"/><path class="fl" d="M 4 48 C 30 0, 110 0, 133 43" stroke-width="2.2"/><polygon points="138.86,53.27 126.99,46.06 139.29,39.40" fill="#7d7d7d"/></svg>',
+  arcBot: '<svg width="100%" height="100%" viewBox="0 0 140 52" preserveAspectRatio="none" aria-hidden="true" style="display:block;overflow:visible"><path d="M 136 4 C 110 52, 30 52, 7 9" fill="none" stroke="#7d7d7d" stroke-width="4" stroke-linecap="round"/><path class="fl" d="M 136 4 C 110 52, 30 52, 7 9" stroke-width="2.2"/><polygon points="1.14,-1.27 13.00,5.94 0.71,12.60" fill="#7d7d7d"/></svg>',
+  cycle: '<svg width="100%" height="100%" viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:block;overflow:visible"><path d="M 33 16 A 14 14 0 0 0 8 13"/><path d="M 8 5 L 8 13 L 16 13"/><path d="M 7 24 A 14 14 0 0 0 32 27"/><path d="M 32 35 L 32 27 L 24 27"/></svg>'
+};
+const pxv = v => (typeof v === 'number' ? v + 'px' : String(v));
+function mixHex(a, b, f) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const x = p(a), y = p(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * f).toString(16).padStart(2, '0')).join(''); }
+function gaussDots(it) { // identical to the figure tool's procedural Gaussian glyph
+  let s = (it.seed || 0) * 7919;
+  for (const ch of String(it.id)) s = (s * 31 + ch.charCodeAt(0)) | 0;
+  const rnd = () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const pal = ['#e9a3a3', '#a8d5a0', '#9fbfe8', '#f3d38b', '#c9b6ec', '#8fd3cb', '#f4b6d0', '#b7cbe8'], W = it.w, H = it.h, n = it.n || 6, out = [];
+  for (let i = 0; i < n; i++) {
+    const rw = W * (0.2 + 0.14 * rnd()), rh = H * (0.42 + 0.3 * rnd());
+    const cx = W * (0.14 + 0.72 * (n > 1 ? i / (n - 1) : 0.5)) + (rnd() - 0.5) * W * 0.06, cy = H * (0.5 + (rnd() - 0.5) * 0.35);
+    const c = pal[(i + (it.seed || 0)) % pal.length];
+    out.push(`position:absolute;border-radius:50%;left:${(cx - rw / 2).toFixed(1)}px;top:${(cy - rh / 2).toFixed(1)}px;width:${rw.toFixed(1)}px;height:${rh.toFixed(1)}px;transform:rotate(${((rnd() - 0.5) * 70).toFixed(0)}deg);background:radial-gradient(circle at 34% 30%, #ffffff 0%, ${c} 48%, ${mixHex(c, '#3e4c59', 0.25)} 100%);`);
+  }
+  return out;
+}
+function boxCss(it) {
+  let c = `position:absolute;left:${it.x}px;top:${it.y}px;box-sizing:border-box;`;
+  if (it.w != null) c += `width:${it.w}px;`; if (it.h != null) c += `height:${it.h}px;`;
+  if (it.bg) c += `background:${it.bg};`;
+  if (it.bw) c += `border:${it.bw}px ${it.bs || 'solid'} ${it.bc || '#8896a5'};`;
+  if (it.radius != null && it.radius !== '') c += `border-radius:${pxv(it.radius)};`;
+  if (it.pad) c += `padding:${it.pad};`;
+  if (it.flex) c += `display:flex;align-items:${it.ai || 'center'};justify-content:center;`;
+  if (it.align) c += `text-align:${it.align};`;
+  if (it.fs) c += `font-size:${it.fs}px;`; if (it.lh) c += `line-height:${pxv(it.lh)};`;
+  if (it.fw) c += `font-weight:${it.fw};`; if (it.fst) c += `font-style:${it.fst};`;
+  if (it.color) c += `color:${it.color};`; if (it.nowrap) c += 'white-space:nowrap;';
+  if (it.rot) c += `transform:rotate(${it.rot}deg);`;
+  return c;
+}
+function imgCss(it) {
+  let c = `position:absolute;left:${it.x}px;top:${it.y}px;width:${it.w}px;height:${it.h}px;box-sizing:border-box;object-fit:${it.fit || 'cover'};display:block;`;
+  if (it.mat) c += `border:${it.mat}px solid #ffffff;box-shadow:0 0 0 1.5px ${it.ring || '#a9a9a9'}, 1.5px 2px 0 1.5px #cfcfcf;`;
+  else if (it.borderW) c += `border:${it.borderW}px solid ${it.bc || '#8896a5'};`;
+  if (it.radius) c += `border-radius:${pxv(it.radius)};`;
+  if (it.opacity != null && it.opacity < 1) c += `opacity:${it.opacity};`;
+  return c;
+}
+function lineSvg(it) {
+  const sw = it.sw || 2, pad = Math.max(14, sw * 5);
+  const P = it.pts || [[it.x1, it.y1], [it.x2, it.y2]]; // elbow lines carry all their points
+  const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+  const minx = Math.min(...xs) - pad, miny = Math.min(...ys) - pad;
+  const vw = Math.max(...xs) - Math.min(...xs) + 2 * pad, vh = Math.max(...ys) - Math.min(...ys) + 2 * pad;
+  const loc = ([x, y]) => ({ x: x - minx, y: y - miny });
+  const a = loc(P[0]), a2 = loc(P[1]), b = loc(P[P.length - 1]), b2 = loc(P[P.length - 2]);
+  const head = (p, q) => { const len = Math.hypot(p.x - q.x, p.y - q.y) || 1, ux = (p.x - q.x) / len, uy = (p.y - q.y) / len, s = (it.headScale || 1) * 2 * sw;
+    const tx = p.x + ux * s, ty = p.y + uy * s, bx = p.x - ux * s, by = p.y - uy * s, f = n => n.toFixed(2);
+    return `${f(tx)},${f(ty)} ${f(bx - uy * s)},${f(by + ux * s)} ${f(bx + uy * s)},${f(by - ux * s)}`; };
+  const h = it.head || 'none';
+  const dash = it.dashArr ? `stroke-dasharray:${it.dashArr};` : it.dash === 'dashed' ? `stroke-dasharray:${sw * 3} ${sw * 2.5};` : '';
+  const d = 'M ' + P.map(p => { const q = loc(p); return `${q.x} ${q.y}`; }).join(' L ');
+  let out = `<svg width="${vw}" height="${vh}" viewBox="0 0 ${vw} ${vh}" aria-hidden="true" style="position:absolute;left:${minx}px;top:${miny}px;overflow:visible;pointer-events:none"><path d="${d}" style="fill:none;stroke:${it.stroke};stroke-width:${sw};stroke-linecap:${it.cap || 'round'};stroke-linejoin:round;${dash}"/>`;
+  if (it.polys) for (const poly of it.polys) out += `<polygon points="${poly.map(p => { const q = loc(p); return `${q.x},${q.y}`; }).join(' ')}" style="fill:${it.stroke}"/>`;
+  else {
+    if (h === 'end' || h === 'both') out += `<polygon points="${head(b, b2)}" style="fill:${it.stroke}"/>`;
+    if (h === 'start' || h === 'both') out += `<polygon points="${head(a, a2)}" style="fill:${it.stroke}"/>`;
+  }
+  return out + '</svg>';
+}
+function buildFigure(host, fig, hotspots, info) {
+  const { W, H, items } = fig, byId = Object.fromEntries(items.map(i => [i.id, i]));
+  const stage = document.createElement('div'); stage.className = 'stage'; stage.style.width = W + 'px'; stage.style.height = H + 'px';
+  let html = '';
+  for (const it of items) {
+    if (it.type === 'panel' || it.type === 'box' || it.type === 'text') {
+      html += `<div style="${boxCss(it)}"><div>${it.text || ''}</div></div>`;
+    } else if (it.type === 'img') html += `<img src="${it.src}" alt="${(it.label || '').replace(/"/g, '&quot;')}" style="${imgCss(it)}" draggable="false">`;
+    else if (it.type === 'line') html += lineSvg(it);
+    else if (it.type === 'glyph') {
+      const pos = `position:absolute;left:${it.x}px;top:${it.y}px;width:${it.w}px;height:${it.h}px;${it.color ? 'color:' + it.color + ';' : ''}${it.rot ? `transform:rotate(${it.rot}deg);` : ''}`;
+      if (it.kind === 'gauss') html += `<div style="${pos}">${gaussDots(it).map(c => `<div style="${c}"></div>`).join('')}</div>`;
+      else html += `<div style="${pos}">${GLYPH[it.kind] || it.svg || ''}</div>`;
+    }
+  }
+  // hotspots: bounding box of the listed items
+  for (const [key, ids, r] of hotspots) {
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (const id of ids) { const it = byId[id]; if (!it) continue; x0 = Math.min(x0, it.x); y0 = Math.min(y0, it.y); x1 = Math.max(x1, it.x + (it.w || 0)); y1 = Math.max(y1, it.y + (it.h || 34)); }
+    html += `<div class="hs" data-k="${key}" aria-hidden="true" style="left:${x0}px;top:${y0}px;width:${x1 - x0}px;height:${y1 - y0}px;border-radius:${r ?? 14}px"></div>`;
+  }
+  stage.innerHTML = html;
+  host.appendChild(stage);
+
+  const wrap = host.parentElement, tip = wrap.querySelector('.ftip');
+  $$('.hs', stage).forEach(b => {
+    b.addEventListener('pointerenter', () => { const d = info[b.dataset.k]; tip.innerHTML = `<b>${d.t}</b>${d.s}`; tip.classList.add('on'); });
+    b.addEventListener('pointermove', e => {
+      const r = wrap.getBoundingClientRect(); let x = e.clientX - r.left + wrap.scrollLeft + 16, y = e.clientY - r.top + 16;
+      if (x + 310 > wrap.scrollLeft + r.width) x -= 330; if (y + tip.offsetHeight > r.height) y -= tip.offsetHeight + 28;
+      tip.style.left = Math.max(4, x) + 'px'; tip.style.top = Math.max(4, y) + 'px';
+    });
+    b.addEventListener('pointerleave', () => tip.classList.remove('on'));
+  });
+  return stage;
+}
+function fitFigure(host, stage, W, H, maxH, minK, availFn) {
+  const fit = () => {
+    const wrap = host.parentElement, cs = getComputedStyle(wrap);
+    const avail = (availFn ? availFn() : wrap.clientWidth) - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const k = Math.max(minK, Math.min(avail / W, maxH() / H, 1));
+    host.style.width = W * k + 'px'; host.style.height = H * k + 'px'; stage.style.transform = `scale(${k})`;
+  };
+  fit(); new ResizeObserver(fit).observe(host.parentElement.parentElement); addEventListener('resize', fit);
+}
+
+const T = (t, s) => ({ t, s });
+const INFO_MODEL = {
+  inputs: T('Context views', 'Eight calibrated views from repeated drives of one road block, with different traffic and lighting.'),
+  A: T('A · Calibrated initialization', 'Wild3R, adapted to driving data with LoRA and lifted with the known cameras.'),
+  backbone: T('Backbone', 'Wild3R encoder and multi-view transformer with rank-16 LoRA adapters.'),
+  mask: T('Transient mask <span class="m">M</span>', 'Per-pixel probability that a pixel shows a vehicle or other transient object.'),
+  points: T('Point maps <span class="m">X</span>', 'Each pixel lifted to 3D with its predicted depth and the known camera.'),
+  feats: T('Features <span class="m">F</span>', 'Transformer features for the Gaussian head and the refiner.'),
+  B: T('B · Entropy-aware sampling', 'Keeps 100k–400k of the 1.6M pixels, preferring textured, static structure.'),
+  entropy: T('Entropy <span class="m">E</span>', 'Local intensity-histogram entropy: high on facades, signs and lane markings.'),
+  mentropy: T('Masked entropy <span class="m">E′</span>', 'Sky and transient pixels down-weighted by 0.1, so the budget goes to the static scene.'),
+  sampling: T('Probabilistic sampling', 'Each pixel is kept with probability ∝ E′, scaled to the budget.'),
+  kept: T('Kept pixels <span class="m">S</span>', 'Only these pixels become Gaussians.'),
+  predictor: T('Sparse compact Gaussian predictor', 'Trained with the sampler in the loop, so Gaussians grow to cover the dropped pixels.'),
+  init: T('Initial Gaussians <span class="m">𝒢</span><sup>(0)</sup>', 'The single forward prediction, before refinement.'),
+  refiner: T('Recurrent relighting refiner', 'Renders, compares with the images and updates the Gaussians. No per-scene optimization.'),
+  crelight: T('Relight to <span class="m">e<sub>tgt</sub></span>', 'The lighting branch (C), used inside the refiner.'),
+  refined: T('Refined Gaussians', 'The final transient-free scene, relit to the target. 0.8 s per scene, 1.15 s with references.'),
+  C: T('C · Decoupled lighting', 'Transfers the lighting of any image by changing Gaussian colors only, never geometry.'),
+  dino: T('DINOv2 (frozen)', 'Image features for the lighting codes and the per-Gaussian features.'),
+  code: T('Code MLP <span class="m">E<sub>ψ</sub></span>', 'One lighting code per image: <span class="m">e<sub>ctx</sub></span> for context views, <span class="m">e<sub>tgt</sub></span> for the target.'),
+  pquery: T('Point-based query → <span class="m">f<sub>j</sub></span>', 'A local feature per Gaussian, so road and sky can react differently to the same lighting change.'),
+  cmlp: T('Color MLP <span class="m">Γ<sub>ψ</sub></span>', 'Predicts a per-Gaussian gain γ and offset b from the two codes and the local feature.'),
+  affine: T('<span class="m">c′<sub>j</sub> = γ<sub>j</sub> ⊙ c<sub>j</sub> + b<sub>j</sub></span>', 'Per-Gaussian affine color transform. Identity when the target code equals the source code.'),
+  D: T('D · Multi-traversal refinement', 'Geometry steps first, then color steps against the target drive.'),
+  geo: T('1 · Geometry steps', 'Update positions, shapes and opacities against the context views.'),
+  app: T('2 · Appearance steps', 'Update colors only, against reference frames of the target drive.'),
+  loop: T('Relight → Render → Residual → Update', 'One recurrent step, run twice per stage.')
+};
+const HS_MODEL = [
+  ['inputs', ['i1', 'i2', 'i3', 'i4', 'i5', 'i6', 't1', 't2', 't3'], 10],
+  ['A', ['p1'], 18], ['B', ['p3'], 18], ['C', ['p2'], 18], ['D', ['p4'], 18],
+  ['backbone', ['g1'], 8], ['mask', ['i7', 'i8', 'i9', 't8'], 8], ['points', ['i10', 'i11', 'i12', 't9'], 8], ['feats', ['i13', 'i14', 'i15', 't10'], 8],
+  ['predictor', ['b2'], 14], ['init', ['g2', 't12'], 10], ['refiner', ['n_b3'], 14], ['crelight', ['n_cchip'], 11], ['refined', ['g3', 't13'], 10],
+  ['entropy', ['i16', 'i17', 'i18', 't15'], 8], ['mentropy', ['i19', 'i20', 'i21', 't17'], 8], ['sampling', ['b6'], 14], ['kept', ['i22', 'i23', 'i24', 't19'], 8],
+  ['dino', ['b8'], 14], ['code', ['b9', 'p6', 'p7', 'p8', 'p9', 't25', 'p6t', 'p7t', 'p8t', 'p9t', 't25t'], 10], ['pquery', ['b10', 'p10', 'p11', 'p12', 'p13', 't28'], 10],
+  ['cmlp', ['b12'], 16], ['affine', ['p19', 'p20', 'p21', 'p22', 'p23', 't35', 't36'], 8],
+  ['geo', ['b14'], 14], ['app', ['b15'], 14], ['loop', ['n_step0', 'n_step1', 'n_step2', 'n_step3'], 19]
+];
+const INFO_REFINE = {
+  current: T('Current Gaussians <span class="m">𝒢</span><sup>(n)</sup>', 'Gaussians plus a hidden state per Gaussian.'),
+  loopK: T('×N recurrent steps', 'Two geometry steps, then two color steps. More steps make LPIPS worse.'),
+  hgeo: T('Stage 1 · Geometry', 'Compares against the context views.'),
+  happ: T('Stage 2 · Appearance', 'Compares against target-drive references, after all geometry steps.'),
+  rgeo: T('Relight to <span class="m">e<sub>ctx</sub></span>', 'Each view is compared at its own lighting, so lighting differences are not mistaken for geometry.'),
+  rapp: T('Relight to <span class="m">e<sub>tgt</sub></span>', 'The scene is relit to the target drive before comparing.'),
+  renderer: T('Renderer', 'Differentiable Gaussian rasterization.'),
+  cgeo: T('Rendered · Context · Residual', 'Residual with transient pixels masked out, so the refiner never asks for the vehicles back.'),
+  capp: T('Rendered · Target · Residual', 'Residual against the target-drive references, masked the same way.'),
+  gather: T('Multi-view gather', 'Each Gaussian reads the residual features of the views in which it is visible.'),
+  transformer: T('KNN point transformer', 'Predicts parameter updates and the next hidden state.'),
+  light: T('Lighting conditions', 'Color steps also see the lighting codes and the current color transform.'),
+  dgeo: T('Δμ, ΔΣ, Δα', 'Geometry steps change geometry only.'),
+  dapp: T('ΔSH', 'Color steps change colors only, so the geometry is the same with and without references.'),
+  update: T('<span class="m">g<sup>n+1</sup> = g<sup>n</sup> + Δg<sup>n</sup></span>', 'Residual update of every Gaussian.'),
+  updated: T('Updated Gaussians', 'Input to the next step.')
+};
+const HS_REFINE = [
+  ['loopK', ['p1', 't1', 'pmrxs1', 'to36e2'], 20], ['current', ['b1'], 31], ['updated', ['b13'], 33],
+  ['hgeo', ['b2', 't3'], 8], ['happ', ['b3', 't4'], 8], ['rgeo', ['b4'], 12], ['rapp', ['b5'], 12], ['renderer', ['b6'], 12],
+  ['cgeo', ['p5'], 14], ['capp', ['p6'], 14], ['gather', ['b7'], 12], ['transformer', ['b8'], 12], ['light', ['b9', 't11'], 10],
+  ['dgeo', ['b10'], 12], ['dapp', ['b11'], 12], ['update', ['b12'], 12]
+];
+if (window.FIGS) {
+  const fm = window.FIGS.model, fr = window.FIGS.refine;
+  const sm = buildFigure($('#figModel'), fm, HS_MODEL, INFO_MODEL);
+  fitFigure($('#figModel'), sm, fm.W, fm.H, () => Infinity, 0.42);
+  const sr = buildFigure($('#figRefine'), fr, HS_REFINE, INFO_REFINE);
+  fitFigure($('#figRefine'), sr, fr.W, fr.H, () => 640, 0.34);
+}
+
+/* ---------- sampler widget ---------- */
+(() => {
+  const N = 160, cv = $('#sampCanvas'), ctx = cv.getContext('2d');
+  let ent, lab;
+  try {
+    const bin = atob(window.SAMPLER_MAP || '');
+    ent = new Float32Array(N * N); lab = new Uint8Array(N * N);
+    for (let i = 0; i < N * N; i++) { const v = bin.charCodeAt(i); ent[i] = (v >> 2) / 63; lab[i] = v & 3; }
+  } catch (e) { $('#sampWidget .lead').textContent += ' (Sampler data could not be loaded.)'; return; }
+  let frac = 0.125, useMask = true, mode = 'kept', seed = 7;
+  const areaT = lab.reduce((a, v) => a + (v === 2), 0) / (N * N), areaS = lab.reduce((a, v) => a + (v === 1), 0) / (N * N);
+  $('#sTransArea').textContent = `(${(areaT * 100).toFixed(0)}% of frame)`;
+  $('#sSkyArea').textContent = `(${(areaS * 100).toFixed(0)}% of frame)`;
+  function probs() {
+    const w = new Float32Array(N * N);
+    for (let i = 0; i < N * N; i++) w[i] = (ent[i] + 0.02) * (useMask && lab[i] ? 0.1 : 1);
+    const T = frac * N * N; let lo = 0, hi = 1e4;
+    for (let it = 0; it < 50; it++) { const s = (lo + hi) / 2; let sum = 0; for (let i = 0; i < N * N; i++) sum += Math.min(1, s * w[i]); if (sum > T) hi = s; else lo = s; }
+    const s = (lo + hi) / 2; for (let i = 0; i < N * N; i++) w[i] = Math.min(1, s * w[i]);
+    return w;
+  }
+  function draw() {
+    const p = probs(), r = rng(seed), c = 320 / N;
+    ctx.clearRect(0, 0, 320, 320);
+    ctx.fillStyle = 'rgba(8,10,14,.62)'; ctx.fillRect(0, 0, 320, 320);
+    let k = 0, kt = 0, ks = 0;
+    if (mode === 'prob') {
+      for (let i = 0; i < N * N; i++) { const a = p[i]; if (a < .01) continue; ctx.fillStyle = `rgba(255,${(150 + 100 * a) | 0},60,${Math.min(1, a * 2.2).toFixed(3)})`; ctx.fillRect((i % N) * c, ((i / N) | 0) * c, c, c); }
+    }
+    for (let i = 0; i < N * N; i++) {
+      if (r() >= p[i]) continue;
+      k++; if (lab[i] === 2) kt++; else if (lab[i] === 1) ks++;
+      if (mode === 'kept') { ctx.fillStyle = lab[i] === 2 ? '#ff4d4d' : lab[i] === 1 ? '#5ec8ff' : '#ffd84d'; ctx.fillRect((i % N) * c, ((i / N) | 0) * c, c * .9, c * .9); }
+    }
+    $('#sKept').textContent = Math.round(frac * 1.6e3) + 'k';
+    $('#sTrans').textContent = (k ? kt / k * 100 : 0).toFixed(1) + '%';
+    $('#sSky').textContent = (k ? ks / k * 100 : 0).toFixed(1) + '%';
+  }
+  $$('#sampBudget button').forEach(b => b.addEventListener('click', () => { setPressed($('#sampBudget'), b); frac = +b.dataset.f; draw(); }));
+  $$('#sampMode button').forEach(b => b.addEventListener('click', () => { setPressed($('#sampMode'), b); mode = b.dataset.m; draw(); }));
+  $('#sampMask').addEventListener('change', e => { useMask = e.target.checked; draw(); });
+  $('#sampAgain').addEventListener('click', () => { seed = (seed * 31 + 11) % 100000 + 1; draw(); });
+  draw();
+})();
+
+/* ---------- lighting widget ---------- */
+const AFF = { sunset: { g: [1.141, 0.811, 0.637], b: [-0.133, -0.154, -0.136], img: 'assets/fig/m_i4.jpg' },
+  night: { g: [0.396, 0.501, 0.870], b: [-0.167, -0.084, -0.127], img: 'assets/fig/m_i6.jpg' } };
+(() => {
+  let tgt = 'sunset', amt = 0, cur = { g: [1, 1, 1], b: [0, 0, 0] }, raf = 0, playing = 0, dir = 1, last = 0;
+  const slider = $('#ltAmt'), btn = $('#ltPlay');
+  const mat = $('#ltM'), bars = $('#ltBars'), CH = ['R', 'G', 'B'], CC = ['#e05a5a', '#4cad5a', '#4f7fd6'];
+  bars.innerHTML = CH.map((c, i) => `<div class="gbar"><span>γ<sub>${c}</sub></span><div class="track"><div class="mid"></div><div class="fill" id="gb${i}" style="background:${CC[i]}"></div></div><b id="gv${i}">1.00</b></div>`).join('') +
+    CH.map((c, i) => `<div class="gbar"><span>b<sub>${c}</sub></span><div class="track"><div class="mid"></div><div class="fill" id="bb${i}" style="background:${CC[i]};opacity:.6"></div></div><b id="bv${i}">0.00</b></div>`).join('');
+  function goal() { const a = AFF[tgt]; return { g: a.g.map(v => 1 + (v - 1) * amt), b: a.b.map(v => v * amt) }; }
+  function apply(s) {
+    mat.setAttribute('values', `${s.g[0]} 0 0 0 ${s.b[0]}  0 ${s.g[1]} 0 0 ${s.b[1]}  0 0 ${s.g[2]} 0 ${s.b[2]}  0 0 0 1 0`);
+    for (let i = 0; i < 3; i++) {
+      const gv = s.g[i], gx = Math.max(0, Math.min(2, gv)) / 2 * 100, bx = 50 + Math.max(-.25, Math.min(.25, s.b[i])) / .25 * 50;
+      const gb = $('#gb' + i), bb = $('#bb' + i);
+      gb.style.left = Math.min(50, gx) + '%'; gb.style.width = Math.abs(gx - 50) + '%';
+      bb.style.left = Math.min(50, bx) + '%'; bb.style.width = Math.abs(bx - 50) + '%';
+      $('#gv' + i).textContent = gv.toFixed(2); $('#bv' + i).textContent = (s.b[i] >= 0 ? '+' : '') + s.b[i].toFixed(2);
+    }
+  }
+  function animateTo() {
+    cancelAnimationFrame(raf);
+    const from = JSON.parse(JSON.stringify(cur)), to = goal(), t0 = performance.now(), D = reduced ? 1 : 550;
+    const step = now => { const t = Math.min(1, (now - t0) / D), e = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      cur = { g: from.g.map((v, i) => v + (to.g[i] - v) * e), b: from.b.map((v, i) => v + (to.b[i] - v) * e) }; apply(cur); if (t < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+  }
+  function setAmt(a) { amt = a; slider.value = a; $('#ltAmtV').textContent = Math.round(a * 100) + '%'; cur = goal(); apply(cur); }
+  // Auto-animate the code strength 0% -> 100% -> 0%, with a short hold at each end.
+  let phase = 0; // runs from -0.15 to 1.15; the overshoot is held at 0% / 100%
+  const tick = now => {
+    phase += dir * Math.min(now - last, 50) / 1800; last = now;
+    if (phase >= 1.15) { phase = 1.15; dir = -1; } else if (phase <= -0.15) { phase = -0.15; dir = 1; }
+    setAmt(Math.max(0, Math.min(1, phase)));
+    playing = requestAnimationFrame(tick);
+  };
+  function play() { if (playing) return; cancelAnimationFrame(raf); btn.textContent = '❚❚ Pause'; last = performance.now(); phase = amt; if (amt >= 1) dir = -1; else if (amt <= 0) dir = 1; playing = requestAnimationFrame(tick); }
+  function stop() { cancelAnimationFrame(playing); playing = 0; btn.textContent = '▶ Animate'; }
+  $$('#ltTarget button').forEach(b => b.addEventListener('click', () => { setPressed($('#ltTarget'), b); tgt = b.dataset.t; $('#ltRef').src = AFF[tgt].img; if (!playing) animateTo(); }));
+  slider.addEventListener('input', e => { stop(); setAmt(+e.target.value); });
+  btn.addEventListener('click', () => playing ? stop() : play());
+  for (const k in AFF) { const im = new Image(); im.src = AFF[k].img; }
+  apply(cur);
+  if (reduced) { stop(); setAmt(1); } else play();
+})();
+
+/* ---------- bench chart ---------- */
+(() => {
+  const R = [
+    ['Real frame', 'b', 10.47, 30.96, 10.44, null, null],
+    ['Wild3R', 'b', 16.48, 15.64, 13.88, 12.67, .489],
+    ['ReSplat', 'b', 14.39, 23.96, 14.08, 14.00, .455],
+    ['MVSplat', 'b', 13.28, 18.85, 13.15, 13.76, .455],
+    ['DepthSplat', 'b', 12.89, 24.78, 13.22, 13.61, .392],
+    ['ReSplat, relit', 'r', 14.43, 23.34, 16.03, 15.39, .447],
+    ['MVSplat, relit', 'r', 13.27, 18.60, 14.88, 15.01, .444],
+    ['DepthSplat, relit', 'r', 12.87, 24.25, 14.93, 14.90, .383],
+    ['Ours, dense', 'o', 18.24, 21.68, 15.29, 14.51, .351],
+    ['Ours', 'o', 18.67, 22.01, 15.25, 14.58, .370],
+    ['Ours + mask', 'o', 20.34, 22.10, 15.58, 14.64, .365],
+    ['Ours + ref', 'o', 18.82, 21.86, 18.63, 17.13, .330],
+    ['Ours + ref + mask', 'o', 20.38, 21.94, 19.05, 17.17, .325]
+  ];
+  const K = { ti: [2, 'Traffic PSNR on re-rendered input views. The unmodified input scores 10.5 dB.', 'dB'],
+    si: [3, 'Static PSNR on input views. Copying the input scores well here, but keeps the vehicles.', 'dB'],
+    th: [4, 'Traffic PSNR on held-out views: how well the road behind traffic is recovered.', 'dB'],
+    fh: [5, 'Full PSNR on held-out views, which also counts ghosts.', 'dB'],
+    lp: [6, 'LPIPS on held-out views (lower is better).', ''] };
+  const rows = $('#benchRows');
+  $('#benchNote').innerHTML = Object.entries(K).map(([k, [, note]]) => `<span data-k="${k}">${note}${k === 'lp' ? '' : ' Bars start at 8 dB.'}</span>`).join('');
+  rows.innerHTML = R.map((r, i) => `<div class="crow ${r[1] === 'o' ? 'ours' : r[1] === 'r' ? 'relit' : ''}${(i === 5 || i === 8) ? ' gap' : ''}"><span class="nm" title="${r[0]}">${r[0]}</span><span class="tr"><span></span></span><span class="v"></span></div>`).join('');
+  function show(k) {
+    const [ci, note, unit] = K[k], vals = R.map(r => r[ci]), num = vals.filter(v => v != null);
+    const lo = k === 'lp' ? 0 : 8, hi = Math.max(...num);
+    $$('.crow', rows).forEach((n, i) => {
+      const v = vals[i];
+      n.querySelector('.tr span').style.width = v == null ? '0' : ((v - lo) / (hi - lo) * 100).toFixed(1) + '%';
+      n.querySelector('.v').textContent = v == null ? '–' : (k === 'lp' ? v.toFixed(3).replace(/^0/, '') : v.toFixed(2));
+      n.style.opacity = v == null ? .45 : 1;
+    });
+    $$('#benchNote span').forEach(n => n.classList.toggle('on', n.dataset.k === k));
+  }
+  $$('#benchMetric button').forEach(b => b.addEventListener('click', () => { setPressed($('#benchMetric'), b); show(b.dataset.k); }));
+  show('ti');
+})();
+
+/* ---------- main table ---------- */
+(() => {
+  const D = {
+    noref: [['Wild3R', 13.56, .458, .423, 16.00, .363, .413, '0.27 s'], ['ReSplat', 19.38, .623, .329, 19.04, .477, .333, '0.38 s'], ['MVSplat', 17.20, .557, .333, 18.12, .434, .334, '0.98 s'], ['DepthSplat', 18.40, .582, .285, 18.53, .447, .268, '0.27 s'], ['MTGS (per-scene)', 19.30, .586, .264, null, null, null, '38 min'], ['<span class="mn">DriveWild3R</span>, dense', 19.18, .623, .227, 18.35, .427, .255, '0.28 s', 1], ['<span class="mn">DriveWild3R</span>', 19.88, .626, .235, 18.65, .419, .249, '0.80 s', 1]],
+    ref: [['ReSplat, relit', 19.91, .625, .328, 19.78, .484, .331, '0.41 s'], ['MVSplat, relit', 17.62, .561, .329, 18.69, .447, .326, '1.02 s'], ['DepthSplat, relit', 18.92, .585, .283, 19.19, .456, .261, '0.31 s'], ['<span class="mn">DriveWild3R</span>', 21.26, .649, .220, 19.90, .456, .218, '1.15 s', 1]] };
+  const NOTE = { noref: 'Gaussians: ReSplat 100k, <span class="mn">DriveWild3R</span> 200k, others 1.6M. Dense = no refiner.',
+    ref: 'All feedforward methods get the same lighting code from our branch. Only <span class="mn">DriveWild3R</span> runs color steps.' };
+  const lower = [false, false, true, false, false, true];
+  const tw = $('#mainTable').closest('.tablewrap');
+  function show(m) {
+    const h0 = tw.offsetHeight;
+    const rows = D[m], best = lower.map((lw, c) => { const v = rows.map(r => r[c + 1]).filter(x => x != null); return lw ? Math.min(...v) : Math.max(...v); });
+    $('#mainTable tbody').innerHTML = rows.map(r => `<tr class="${r[8] ? 'ours' : ''}"><td>${r[0]}</td>${r.slice(1, 7).map((v, c) => v == null ? '<td class="dim">–</td>' : `<td class="${v === best[c] ? 'best' : ''}">${c === 0 || c === 3 ? v.toFixed(2) : v.toFixed(3).replace(/^0/, '')}</td>`).join('')}<td>${r[7]}</td></tr>`).join('');
+    $('#mainNote').innerHTML = NOTE[m];
+    const h1 = tw.offsetHeight;
+    if (!reduced && h0 && h0 !== h1 && tw.animate) tw.animate([{ height: h0 + 'px', overflow: 'hidden' }, { height: h1 + 'px', overflow: 'hidden' }], { duration: 320, easing: 'cubic-bezier(.3,.7,.2,1)' });
+  }
+  $$('#mainMode button').forEach(b => b.addEventListener('click', () => { setPressed($('#mainMode'), b); show(b.dataset.m); }));
+  show('noref');
+})();
+
+/* ---------- relight slider ---------- */
+(() => {
+  let blk = 0, v = 0, playing = 0, dir = 1, last = 0;
+  const names = ['noon', 'noon → sunset', 'noon → sunset', 'sunset', 'sunset → night', 'sunset → night', 'night'];
+  const frame = $('#rlFrame'), srcFrame = $('#rlSrc').parentNode, slider = $('#rlSlider'), btn = $('#rlPlay');
+  // Pre-stack every render as its own layer so the animation only changes opacity
+  // (never src), avoiding decode flashes when crossing between codes.
+  const mk = (parent, src, alt) => { const im = document.createElement('img'); im.src = src; im.alt = alt; im.decoding = 'sync'; im.style.transition = 'none'; im.style.opacity = 0; parent.insertBefore(im, parent.querySelector('.tag')); return im; };
+  $('#rlA').remove(); $('#rlB').remove(); $('#rlSrc').remove();
+  const relit = [0, 1].map(b => Array.from({ length: 7 }, (_, i) => mk(frame, `assets/relight/b${b}_${i + 1}.jpg`, i ? '' : 'Relit render')));
+  const srcs = [0, 1].map(b => mk(srcFrame, `assets/relight/b${b}_0.jpg`, b ? '' : 'Source lighting render'));
+  function show() {
+    const i = Math.min(5, Math.floor(v)), f = v - i;
+    relit.forEach((layers, b) => layers.forEach((im, k) => {
+      im.style.opacity = b !== blk ? 0 : k === i ? 1 : k === i + 1 ? f.toFixed(3) : 0;
+    }));
+    srcs.forEach((im, b) => im.style.opacity = b === blk ? 1 : 0);
+    $('#rlTag').textContent = 'Relit · ' + names[Math.round(v)];
+  }
+  const tick = now => {
+    v += dir * Math.min(now - last, 50) / 900; last = now;
+    if (v >= 6) { v = 6; dir = -1; } if (v <= 0) { v = 0; dir = 1; }
+    slider.value = v; show(); playing = requestAnimationFrame(tick);
+  };
+  function play() { if (playing) return; btn.textContent = '❚❚ Pause'; last = performance.now(); dir = v >= 6 ? -1 : v <= 0 ? 1 : dir; playing = requestAnimationFrame(tick); }
+  function stop() { cancelAnimationFrame(playing); playing = 0; btn.textContent = '▶ Animate'; }
+  slider.addEventListener('input', e => { stop(); v = +e.target.value; show(); });
+  $$('#rlBlock button').forEach(b => b.addEventListener('click', () => { setPressed($('#rlBlock'), b); blk = +b.dataset.b; show(); }));
+  btn.addEventListener('click', () => playing ? stop() : play());
+  show();
+  if (!reduced) play();
+})();
+
+/* ---------- follow videos ---------- */
+(() => {
+  const vs = $$('.vids video'), btn = $('#vidPlay'), seen = new Set();
+  let user = false;
+  const sync = () => btn.textContent = vs.every(v => v.paused) ? '▶ Play' : '❚❚ Pause';
+  vs.forEach(v => { v.addEventListener('play', sync); v.addEventListener('pause', sync); });
+  // both clips are retimed to the same length; keep the second locked to the first
+  vs[0].addEventListener('timeupdate', () => {
+    const a = vs[0], b = vs[1], d = a.duration && b.duration ? b.currentTime / b.duration - a.currentTime / a.duration : 0;
+    if (Math.abs(d) > 0.02 && Math.abs(d) < 0.98 && !b.paused) b.currentTime = a.currentTime / a.duration * b.duration;
+  });
+  btn.addEventListener('click', () => {
+    if (vs.every(v => v.paused)) { user = false; vs.forEach(v => v.play().catch(() => {})); }
+    else { user = true; vs.forEach(v => v.pause()); }
+  });
+  if (reduced) { sync(); return; }
+  // play only while visible, to save bandwidth and CPU
+  new IntersectionObserver(es => {
+    es.forEach(e => e.isIntersecting ? seen.add(e.target) : seen.delete(e.target));
+    if (seen.size && !user) vs.forEach(v => v.play().catch(() => {}));
+    else if (!seen.size) vs.forEach(v => v.pause());
+  }, { threshold: 0.2 }).observe($('.vids'));
+})();
+
+/* ---------- lightbox & bibtex ---------- */
+const lb = $('#lb');
+document.addEventListener('click', e => {
+  const t = e.target.closest('img[data-zoom]');
+  if (!t || !lb.showModal) return;
+  $('#lbImg').src = t.currentSrc || t.src; $('#lbImg').alt = t.alt; lb.showModal();
+});
+$('#lbClose').addEventListener('click', () => lb.close());
+lb.addEventListener('click', e => { if (e.target === lb) lb.close(); });
+$('#bibCopy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('#bib').textContent); $('#bibCopy').textContent = 'Copied'; }
+  catch (e) { const r = document.createRange(); r.selectNodeContents($('#bib')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('#bibCopy').textContent = 'Selected'; }
+  setTimeout(() => $('#bibCopy').textContent = 'Copy', 1600);
+});
+})();
+</script>
+</body>
+</html>
